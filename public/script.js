@@ -3,6 +3,9 @@ const input = document.getElementById('user-input');
 const chatBox = document.getElementById('chat-box');
 const themeToggleButton = document.getElementById('theme-toggle');
 
+const USER_AVATAR_URL = 'https://cdn-icons-png.flaticon.com/512/1144/1144760.png'; // Generic User Icon
+const BOT_AVATAR_URL = 'https://cdn-icons-png.flaticon.com/512/8943/8943377.png';    // Generic Bot Icon (Robot)
+
 form.addEventListener('submit', function (e) {
   e.preventDefault(); // Prevent the default form submission which reloads the page
 
@@ -17,19 +20,38 @@ form.addEventListener('submit', function (e) {
 });
 
 function appendMessage(sender, text) {
-  const msg = document.createElement('div');
-  msg.classList.add('message', sender);
-  msg.textContent = text;
-  chatBox.appendChild(msg);
+  const messageDiv = document.createElement('div');
+  messageDiv.classList.add('message', sender);
+
+  const avatarImg = document.createElement('img');
+  avatarImg.classList.add('message-avatar');
+  avatarImg.alt = sender === 'user' ? 'User Avatar' : 'Bot Avatar';
+  avatarImg.src = sender === 'user' ? USER_AVATAR_URL : BOT_AVATAR_URL;
+
+  const messageContentDiv = document.createElement('div');
+  messageContentDiv.classList.add('message-content');
+  messageContentDiv.textContent = text;
+
+  if (sender === 'user') {
+    // For user: content first, then avatar (due to flex-direction: row-reverse in CSS)
+    messageDiv.appendChild(messageContentDiv);
+    messageDiv.appendChild(avatarImg);
+  } else { // bot
+    // For bot: avatar first, then content
+    messageDiv.appendChild(avatarImg);
+    messageDiv.appendChild(messageContentDiv);
+  }
+
+  chatBox.appendChild(messageDiv);
   chatBox.scrollTop = chatBox.scrollHeight;
-  return msg; // Return the message element so it can be updated (e.g., "thinking..." message)
+  return messageContentDiv; // Return the content div for updating "thinking..." or other direct text manipulations
 }
 
 async function sendToBackend(message) {
   try {
     // Indicate that the bot is thinking by creating a message element
-    const thinkingMessage = appendMessage('bot', 'Gemini is thinking...'); // Original text
-    thinkingMessage.classList.add('thinking'); // Add class for special styling
+    const thinkingMessageContent = appendMessage('bot', 'Gemini is thinking...');
+    thinkingMessageContent.classList.add('thinking'); // Add class for special styling to the content part
 
     // Here's the fetch() call to your backend API
     const response = await fetch('/api/chat', {
@@ -49,18 +71,19 @@ async function sendToBackend(message) {
 
     const data = await response.json(); // Parse the JSON response from the server
     // Update the "thinking..." message with the actual reply from Gemini
-    thinkingMessage.classList.remove('thinking'); // Remove thinking class
-    thinkingMessage.textContent = data.reply;
+    thinkingMessageContent.classList.remove('thinking'); // Remove thinking class
+    thinkingMessageContent.textContent = data.reply;
   } catch (error) {
     console.error('Error sending message to backend:', error);
     // Display a user-friendly error message in the chat box
     // If a thinking message was created and an error occurred, update it or remove it
-    const thinkingMsgElement = chatBox.querySelector('.message.thinking');
-    if (thinkingMsgElement) {
-        thinkingMsgElement.classList.remove('thinking');
-        thinkingMsgElement.textContent = `Sorry, something went wrong: ${error.message}`;
+    const lastBotMessageContent = chatBox.querySelector('.message.bot:last-child .message-content');
+    if (lastBotMessageContent && lastBotMessageContent.classList.contains('thinking')) {
+        lastBotMessageContent.classList.remove('thinking');
+        lastBotMessageContent.textContent = `Sorry, something went wrong: ${error.message}`;
     } else {
-        appendMessage('bot', `Sorry, something went wrong: ${error.message}`);
+        // If no thinking message, or it's not the last one, append a new error message
+        appendMessage('bot', `Sorry, something went wrong: ${error.message}`); // This returns the content div
     }
   }
 }

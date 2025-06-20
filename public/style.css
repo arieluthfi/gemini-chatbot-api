@@ -135,13 +135,10 @@
  }
  
  .message {
+    display: flex; /* Added for avatar and content alignment */
+    align-items: flex-end; /* Align avatar and bubble nicely */
      max-width: 80%; /* Batasi lebar pesan */
-     padding: 10px 15px;
-     border-radius: 18px; /* Bentuk gelembung pesan */
-     word-wrap: break-word; /* Memastikan pesan panjang terbungkus */
-     white-space: pre-wrap; /* Mempertahankan spasi dan baris baru */
-     box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.1);
-    line-height: 1.4; /* Improve readability for long text */
+    /* padding, border-radius, word-wrap, white-space, box-shadow, line-height moved to .message-content */
     animation: fadeIn 0.3s ease-out; /* Animation for new messages */
  }
 
@@ -150,18 +147,49 @@
     to { opacity: 1; transform: translateY(0); }
  }
  
+.message-avatar {
+    width: 30px; /* Avatar size */
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover; /* Ensures the image covers the area, might crop */
+    flex-shrink: 0; /* Prevent avatar from shrinking */
+    background-color: var(--body-bg); /* Fallback background */
+}
+
+.message-content {
+    padding: 10px 15px;
+    border-radius: 18px; /* Bentuk gelembung pesan */
+    word-wrap: break-word; /* Memastikan pesan panjang terbungkus */
+    white-space: pre-wrap; /* Mempertahankan spasi dan baris baru */
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1); /* Slightly adjusted shadow */
+    line-height: 1.4; /* Improve readability for long text */
+    position: relative; /* For potential future use with pseudo-elements like tails */
+}
+
  .message.user {
      align-self: flex-end; /* Pesan user di sebelah kanan */
+    flex-direction: row-reverse; /* Content first, then avatar for user */
+}
+.message.user .message-avatar {
+    margin-left: 8px;
+}
+.message.user .message-content {
     background-color: var(--message-user-bg);
     color: var(--message-user-text);
-     border-bottom-right-radius: 2px; /* Sudut tajam di dekat input */
+    border-bottom-right-radius: 2px; /* Sudut tajam di dekat input */
  }
  
  .message.bot {
      align-self: flex-start; /* Pesan bot di sebelah kiri */
+    /* flex-direction: row; is default (avatar first, then content) */
+}
+.message.bot .message-avatar {
+    margin-right: 8px;
+}
+.message.bot .message-content {
     background-color: var(--message-bot-bg);
     color: var(--message-bot-text);
-     border-bottom-left-radius: 2px; /* Sudut tajam di dekat input */
+    border-bottom-left-radius: 2px; /* Sudut tajam di dekat input */
  }
  
  .chat-input-area {
@@ -208,7 +236,7 @@
  }
  
  /* Style for the "thinking" message */
- .message.thinking {
+ .message-content.thinking { /* Target the content div for thinking style */
      font-style: italic;
     color: var(--thinking-message-color);
     /* background-color: transparent !important; /* Optional: make thinking message less prominent */
