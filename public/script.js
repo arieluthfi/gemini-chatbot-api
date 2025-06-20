@@ -2,8 +2,9 @@ const form = document.getElementById('chat-form');
 const input = document.getElementById('user-input');
 const chatBox = document.getElementById('chat-box');
 const themeToggleButton = document.getElementById('theme-toggle');
+const notificationSound = document.getElementById('bot-response-sound');
 
-const USER_AVATAR_URL = 'https://cdn-icons-png.flaticon.com/512/1144/1144760.png'; // Generic User Icon
+const USER_AVATAR_URL = 'https://cdn-icons-png.flaticon.com/512/1144/1144709.png'; // Generic User Icon (Dark mode friendly)
 const BOT_AVATAR_URL = 'https://cdn-icons-png.flaticon.com/512/8943/8943377.png';    // Generic Bot Icon (Robot)
 
 form.addEventListener('submit', function (e) {
@@ -73,6 +74,7 @@ async function sendToBackend(message) {
     // Update the "thinking..." message with the actual reply from Gemini
     thinkingMessageContent.classList.remove('thinking'); // Remove thinking class
     thinkingMessageContent.textContent = data.reply;
+    playNotificationSound();
   } catch (error) {
     console.error('Error sending message to backend:', error);
     // Display a user-friendly error message in the chat box
@@ -85,6 +87,22 @@ async function sendToBackend(message) {
         // If no thinking message, or it's not the last one, append a new error message
         appendMessage('bot', `Sorry, something went wrong: ${error.message}`); // This returns the content div
     }
+    playNotificationSound();
+  }
+}
+
+// Helper function to play the notification sound
+function playNotificationSound() {
+  // Resetting the sound's current time allows it to be played again quickly
+  notificationSound.currentTime = 0;
+  const playPromise = notificationSound.play();
+
+  if (playPromise !== undefined) {
+    playPromise.catch(error => {
+      // Autoplay was prevented. This is common in browsers until the user interacts with the page.
+      // We can log this for debugging but it's not a critical error for the user.
+      console.warn("Audio playback failed:", error);
+    });
   }
 }
 
